@@ -15,38 +15,47 @@ const { NotImplementedError } = require('../extensions/index.js');
  */
 function transform(arr) {
   let transArray = [];
+  let isDiscarded = 0;
   if (arr instanceof Array) {
     for (let i = 0; i < arr.length; i++){
-      arrElement = +arr[i]
-      if (typeof arrElement === 'number' && !isNaN(arrElement)) {
-        transArray.push(arrElement);
-      } else {
-        if (i > 0 && typeof +arr[i-1] === 'number' && !isNaN(arrElement)){
-          switch (arr[i]) {
-            case '--discard-next':
-              i < arr.length-2 && i++;
-              break;
-            case '--discard-prev':
-              i > 0 && transArray.length > 0 && transArray.pop();
-              break;
-            case '--double-next':
-              i < arr.length-1 && transArray.push(+arr[i+1]*2);
-              i++;
-              break;
-            case '--double-prev':
-              (i > 0 && transArray.length > 0) ? transArray[i-1]*=2 : ''
-              break;
-            case NaN:
-              break;
-          }
+      transArray.push(arr[i]);
+      if (typeof transArray[transArray.length-1] === 'string') {
+        switch (transArray[transArray.length-1]) {
+          case '--discard-next':
+            transArray.pop();
+            isDiscarded = 1;
+            i++;
+            break;
+          case '--discard-prev':
+            transArray.pop();
+            if (!isDiscarded) {
+              transArray[transArray.length-1] && transArray.pop();
+            } else {
+              isDiscarded = 0;
+            }
+            break;
+          case '--double-next':
+            transArray.pop();
+            arr[i+1] && transArray.push(arr[i+1]);
+            break;
+          case '--double-prev':
+            transArray.pop();
+            if (!isDiscarded) {
+              transArray[transArray.length-1] && transArray.push(transArray[transArray.length-1]);
+            } else {
+              isDiscarded = 0;
+            }            
+            break;
+          case NaN:
+            transArray.pop();
+            break;
         }
       }
     }
     return transArray;
   } else {
     throw new Error ("'arr' parameter must be an instance of the Array!");
-  }
-  
+  }  
 }
 
 
